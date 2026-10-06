@@ -1,0 +1,50 @@
+---
+title: "p8105_hw2_yj2931"
+author: "Yuyao"
+date: "2026-10-06"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+## Problem one
+
+Steps: 
+1. Read and clean the data
+2. Retain line, station, name, station latitude / longitude, routes served, entry, vending, entrance type, and ADA compliance. 
+3. Convert the entry variable from character (YES vs NO) to a logical variable
+
+```{r}
+nyc_transit_df = 
+  read.csv(file = "NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c("","NA", ".")) |> 
+  janitor::clean_names() |> 
+  select(
+    line,
+    station_name,
+    station_latitude,
+    station_longitude,
+    route1:route11,
+    entry,
+    vending,
+    entrance_type,
+    ada
+  ) |>
+  mutate(
+    entry = case_match(
+    entry,
+    "YES" ~ TRUE,
+    "NO" ~ FALSE
+  )
+)
+```
+### Description:
+
+The dataset contains information on NYC subway entrances and exits, including line, station name, station latitude and longitude, routes served, entry status, vending availability, entrance type, and ADA compliance. 
+
+I cleaned the variable names, kept only the variables required for this problem, and converted `entry` from `"YES"` / `"NO"` character values to a logical variable. 
+
+The resulting dataset has `r nrow(nyc_transit_df)` rows and `r ncol(nyc_transit_df)` columns. The data are not fully tidy because the routes served are stored across multiple columns (`route1` to `route11`) instead of in one route variable.
+
+
