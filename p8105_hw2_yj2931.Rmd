@@ -20,6 +20,7 @@ Steps:
 nyc_transit_df = 
   read.csv(file = "NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c("","NA", ".")) |> 
   janitor::clean_names() |> 
+  
   select(
     line,
     station_name,
@@ -31,7 +32,8 @@ nyc_transit_df =
     entrance_type,
     ada
   ) |>
-  mutate(
+ 
+   mutate(
     entry = case_match(
     entry,
     "YES" ~ TRUE,
@@ -47,4 +49,30 @@ I cleaned the variable names, kept only the variables required for this problem,
 
 The resulting dataset has `r nrow(nyc_transit_df)` rows and `r ncol(nyc_transit_df)` columns. The data are not fully tidy because the routes served are stored across multiple columns (`route1` to `route11`) instead of in one route variable.
 
+### 1. Number of distinct stations
+```{r}
+num_distinct = nyc_transit_df |>
+  distinct(line, station_name) |>
+  nrow()
+```
 
+### 2. Number of ADA-compliant stations
+
+```{r}
+num_ada = nyc_transit_df |>
+  filter(ada == TRUE) |>
+  distinct(line, station_name) |>
+  nrow()
+```
+
+### 3. Proportion of entrances/exits without vending that allow entrance
+
+```{r}
+proportion_no_vending = nyc_transit_df |>
+  filter(vending == "NO") |>
+  summarize(
+    proportion = round(mean(entry, na.rm = TRUE), 2)
+  )
+```
+
+There are `r num_distinct` stations here. `r num_ada` stations are ADA compliant. The proportion of station entrances / exits without vending allow entrance is around `r proportion_no_vending` (rounded to 2 decimal places).
