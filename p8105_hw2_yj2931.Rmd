@@ -19,7 +19,7 @@ Steps:
 
 ```{r}
 nyc_transit_df = 
-  read.csv(file = "NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c("","NA", ".")) |> 
+  read.csv(file = "data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c("","NA", ".")) |> 
   janitor::clean_names() |> 
   
   select(
@@ -89,10 +89,21 @@ nyc_transit_df =
     names_prefix = "route"
   ) |>
   drop_na(route_name)
+
+a_stations =
+  nyc_transit_df |>
+  filter(route_name == "A") |>
+  distinct(line, station_name, ada) |>
+  summarize(
+    stations = n(),
+    ada_compliant = sum(ada)
+  )
 ```
 
 
-There are `r num_distinct` stations here. `r num_ada` stations are ADA compliant. The proportion of station entrances / exits without vending allow entrance is around `r proportion_no_vending` (rounded to 2 decimal places).
+There are `r num_distinct$n` distinct stations, of which `r num_ada` are ADA compliant. Among entrances/exits without vending, the proportion that allow entrance is `r proportion_no_vending$proportion` (rounded to two decimal places).
+
+There are `r nrow(a_stations)` distinct stations that serve the A train. Of these, `r a_stations$ada_compliant` are ADA compliant.
 
 
 ## Problem 2
@@ -102,7 +113,7 @@ Import and clean the dataset.
 ```{r}
 mr_trash_wheel_df = 
   read_excel(
-    "202610 Trash Wheel Collection Data.xlsx",
+    "data/202610 Trash Wheel Collection Data.xlsx",
     sheet = "Mr. Trash Wheel",
     range = "A2:N743",
   ) |>
@@ -128,7 +139,7 @@ Import the data for Professor Trash Wheel.
 ```{r}
 professor_trash_wheel_df = 
   read_excel(
-    "202610 Trash Wheel Collection Data.xlsx",
+    "data/202610 Trash Wheel Collection Data.xlsx",
     sheet = "Professor Trash Wheel",
     range = "A2:M140",
     na = c("", "dive")
@@ -143,7 +154,7 @@ Import the data for Gwynnda.
 ```{r}
 gwynnda_df = 
   read_excel(
-    "202610 Trash Wheel Collection Data.xlsx",
+    "data/202610 Trash Wheel Collection Data.xlsx",
     sheet = "Gwynnda the Good Wheel of the W",
     range = "A2:L395",
   ) |>
@@ -203,7 +214,7 @@ Steps:
 
 ```{r}
 mci_baseline_df = read_csv(
-  "data_mci/MCI_baseline.csv", 
+  "data/data_mci/MCI_baseline.csv", 
   skip = 1,
   na = c("","NA", "."),
   show_col_types = FALSE) |>
@@ -258,18 +269,21 @@ female_apoe4_prop =
 
 The baseline demographic dataset was imported by skipping the first descriptive row and treating `"."` as a missing value. Variable names were cleaned, sex and APOE4 carrier status were converted from numeric codes to categorical variables, and participants who already had MCI at baseline were excluded. 
 
-The resulting dataset contains `r num_participants` participants. Of these, `r num_mci` developed MCI during follow-up. The average baseline age was `r round(mean_baseline_age, 2)` years. Among women in the study, `r female_apoe4_prop * 100`% were APOE4 carriers.
+The baseline dataset contained 483 recruited participants. After excluding 4 participants who already had MCI at baseline, `r num_participants` eligible participants remained. Of these, `r num_mci` developed MCI during follow-up. The average baseline age among eligible participants was `r round(mean_baseline_age$mean_age, 2)` years. Among eligible women, `r female_apoe4_prop$proportion * 100`% were APOE4 carriers.
 
-Similarly, import, clean, and tidy the dataset of longitudinally observed biomarker values; comment on the steps on the import process and the features of the dataset.
+Import, clean, and tidy the dataset of longitudinally observed biomarker values.
+Comment on the steps on the import process and the features of the dataset.
 
 ```{r }
-mci_amyloid_df = read_csv(
-  "data_mci/mci_amyloid.csv", 
-  skip = 1,
-  na = c("","NA", "."),
-  show_col_types = FALSE) |>
-  janitor::clean_names()
-
+mci_amyloid_df =
+  read_csv(
+    "data/data_mci/mci_amyloid.csv",
+    skip = 1,
+    na = c("", "NA", "Na", "."),
+    show_col_types = FALSE
+  ) |>
+  janitor::clean_names() |>
+  rename(time_0 = baseline)
 ```
 
 The amyloid dataset was imported by skipping the first descriptive row, treating blank values, `"NA"`, and `"."` as missing values, and cleaning the variable names. 
@@ -320,7 +334,7 @@ Export the result as a CSV to my data directory
 ```{r}
 write_csv(
   mci_combined_df,
-  "data_mci/mci_combined.csv"
+  "data/data_mci/mci_combined.csv"
 )
 ```
 
