@@ -205,7 +205,8 @@ Steps:
 mci_baseline_df = read_csv(
   "data_mci/MCI_baseline.csv", 
   skip = 1,
-  na = c("","NA", ".")) |>
+  na = c("","NA", "."),
+  show_col_types = FALSE) |>
   janitor::clean_names() |> 
   mutate(
     sex = case_match(
@@ -214,18 +215,112 @@ mci_baseline_df = read_csv(
       1 ~ "Male"),
     apoe4 = case_match(
       apoe4,
-      0 ~ "carrier",
-      1 ~ "non-carrier")
+      0 ~ "non-carrier",
+      1 ~ "carrier")
   ) |> 
   filter(is.na(age_at_onset) | age_at_onset > current_age)
-  
+```
+Number of recruited participants:
+
+```{r}
+num_participants = nrow(mci_baseline_df)
+```
+
+Number of recruited participants who develop MCI:
+
+```{r}
+num_mci =
+  mci_baseline_df |>
+  filter(!is.na(age_at_onset)) |>
+  nrow()
+```
+
+Average baseline age:
+
+```{r}
+mean_baseline_age =
+  mci_baseline_df |>
+  summarize(
+    mean_age = mean(current_age, na.rm = TRUE)
+  )
+```
+
+Proportion of women in the study are APOE4 carriers:
+
+```{r}
+female_apoe4_prop =
+  mci_baseline_df |>
+  filter(sex == "Female") |>
+  summarize(
+    proportion = mean(apoe4 == "carrier", na.rm = TRUE)
+  )
+```
+
+The baseline demographic dataset was imported by skipping the first descriptive row and treating `"."` as a missing value. Variable names were cleaned, sex and APOE4 carrier status were converted from numeric codes to categorical variables, and participants who already had MCI at baseline were excluded. 
+
+The resulting dataset contains `r num_participants` participants. Of these, `r num_mci` developed MCI during follow-up. The average baseline age was `r round(mean_baseline_age, 2)` years. Among women in the study, `r female_apoe4_prop * 100`% were APOE4 carriers.
+
+Similarly, import, clean, and tidy the dataset of longitudinally observed biomarker values; comment on the steps on the import process and the features of the dataset.
+
+```{r }
+mci_amyloid_df = read_csv(
+  "data_mci/mci_amyloid.csv", 
+  skip = 1,
+  na = c("","NA", "."),
+  show_col_types = FALSE) |>
+  janitor::clean_names()
 
 ```
 
+The amyloid dataset was imported by skipping the first descriptive row, treating blank values, `"NA"`, and `"."` as missing values, and cleaning the variable names. 
 
+The dataset contains `r nrow(mci_amyloid_df)` observations and `r ncol(mci_amyloid_df)` variables. The variables include `study_id` and amyloid β 42/40 measurements taken at baseline and at approximately 2, 4, 6, and 8 years after baseline. 
 
-Discuss important steps in the import process and relevant features of the dataset. How many participants were recruited, and of these how many develop MCI? What is the average baseline age? What proportion of women in the study are APOE4 carriers?
+Some participants have missing biomarker measurements at certain follow-up times.
 
+Check whether some participants appear in only the baseline or amyloid datasets, and comment on your findings.
+Find participants who's in only the baseline or amyloid datasets:
 
+```{r}
+baseline_only =
+  mci_baseline_df |>
+  anti_join(
+    mci_amyloid_df,
+    by = c("id" = "study_id")
+  )
 
+amyloid_only =
+  mci_amyloid_df |>
+  anti_join(
+    mci_baseline_df,
+    by = c("study_id" = "id")
+  )
+```
+
+Combine the demographic and biomarker datasets so that only participants who appear in both datasets are retained:
+
+```{r}
+mci_combined_df =
+  mci_baseline_df |>
+  inner_join(
+    mci_amyloid_df,
+    by = c("id" = "study_id")
+  )
+
+dim(mci_combined_df)
+```
+
+### Description: 
+
+There were `r nrow(baseline_only)` participants who appeared only in the baseline demographic dataset and `r nrow(amyloid_only)` participants who appeared only in the amyloid dataset. 
+
+After combining the datasets using an inner join, the resulting dataset contains `r nrow(mci_combined_df)` participants and `r ncol(mci_combined_df)` variables. The combined dataset includes demographic information such as age, sex, education, and APOE4 status, as well as amyloid β 42/40 measurements at baseline and follow-up visits.
+
+Export the result as a CSV to my data directory
+```{r}
+write_csv(
+  mci_combined_df,
+  "data_mci/mci_combined.csv"
+)
+```
 
