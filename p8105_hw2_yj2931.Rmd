@@ -10,7 +10,7 @@ library(tidyverse)
 library(readxl)
 ```
 
-## Problem one
+## Problem 1
 
 Steps: 
 1. Read and clean the data
@@ -105,7 +105,6 @@ mr_trash_wheel_df =
     "202610 Trash Wheel Collection Data.xlsx",
     sheet = "Mr. Trash Wheel",
     range = "A2:N743",
-    skip = 1
   ) |>
   janitor::clean_names()
 ```
@@ -120,8 +119,7 @@ mr_trash_wheel_df =
     mutate(
       sports_balls = as.integer(round(sports_balls)),
       trash_wheel = "Mr. Trash Wheel",
-      year = as.integer(year),
-      plastic_bottles = parse_number(as.character(plastic_bottles))
+      year = as.integer(year)
     )
 ```
 
@@ -133,16 +131,11 @@ professor_trash_wheel_df =
     "202610 Trash Wheel Collection Data.xlsx",
     sheet = "Professor Trash Wheel",
     range = "A2:M140",
-    skip = 1
+    na = c("", "dive")
   ) |>
   janitor::clean_names() |> 
-      filter(!is.na(dumpster),
-             plastic_bottles != "dive") |> 
-  mutate(
-    trash_wheel = "Professor Trash Wheel",
-    year = as.integer(year),
-    plastic_bottles = parse_number(as.character(plastic_bottles))
-  )
+      filter(!is.na(dumpster)) |> 
+  mutate(trash_wheel = "Professor Trash Wheel")
 ```
 
 Import the data for Gwynnda. 
@@ -153,14 +146,10 @@ gwynnda_df =
     "202610 Trash Wheel Collection Data.xlsx",
     sheet = "Gwynnda the Good Wheel of the W",
     range = "A2:L395",
-    skip = 1
   ) |>
   janitor::clean_names() |> 
       filter(!is.na(dumpster)) |> 
-  mutate(
-    trash_wheel = "Gwynnda",
-    year = as.integer(year),
-    plastic_bottles = parse_number(as.character(plastic_bottles))
+  mutate(trash_wheel = "Gwynnda"
   )
 ```
 
@@ -205,6 +194,37 @@ gwynnda_butts =
 
 For the available data, Professor Trash Wheel collected a total of `r professor_weight` tons of trash. Gwynnda collected a total of `r as.integer(gwynnda_butts)` cigarette butts in June 2022.
 
+## Problem 3
+
+Steps: 
+1. Import, clean, and tidy the dataset of baseline demographics. 
+2. Encode sex and APOE4 carrier status.
+3. Remove any participants who do not meet the stated inclusion criteria. 
+
+```{r}
+mci_baseline_df = read_csv(
+  "data_mci/MCI_baseline.csv", 
+  skip = 1,
+  na = c("","NA", ".")) |>
+  janitor::clean_names() |> 
+  mutate(
+    sex = case_match(
+      sex,
+      0 ~ "Female",
+      1 ~ "Male"),
+    apoe4 = case_match(
+      apoe4,
+      0 ~ "carrier",
+      1 ~ "non-carrier")
+  ) |> 
+  filter(is.na(age_at_onset) | age_at_onset > current_age)
+  
+
+```
+
+
+
+Discuss important steps in the import process and relevant features of the dataset. How many participants were recruited, and of these how many develop MCI? What is the average baseline age? What proportion of women in the study are APOE4 carriers?
 
 
 
