@@ -283,7 +283,14 @@ mci_amyloid_df =
     show_col_types = FALSE
   ) |>
   janitor::clean_names() |>
-  rename(time_0 = baseline)
+  rename(time_0 = baseline) |>
+  pivot_longer(
+    cols = starts_with("time_"),
+    names_to = "time",
+    names_prefix = "time_",
+    names_transform = list(time = as.integer),
+    values_to = "amyloid_ratio"
+  )
 ```
 
 The amyloid dataset was imported by skipping the first descriptive row, treating blank values, `"NA"`, and `"."` as missing values, and cleaning the variable names. 
